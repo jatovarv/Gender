@@ -9,7 +9,7 @@
     #confirmation { display: block; }
     #form-section { display: none; }
     #thanks { display: none; }
-    button { margin: 10px; padding: 10px 20px; }
+    button { margin: 10px; padding: 10px 20px; cursor: pointer; }
     input { padding: 10px; width: min(380px, 90%); }
   </style>
 </head>
@@ -41,7 +41,6 @@
 
   <script>
     const guests = {
-      // Lista de invitados normalizada a minúsculas
       "laura del pilar hortal": { partner: null },
       "ignacio fernández": { partner: null },
       "gertrudis arzat": { partner: null },
@@ -49,11 +48,8 @@
       "diana tovar": { partner: "Andrés Ocampo" },
       "daniel tovar": { partner: "Samantha Henkel" },
       "jaime alberto tovar camacho": { partner: null },
-
-      // OJO: en tu archivo tenías "alejandro tovar" dos veces; la segunda pisa a la primera.
-      // Deja solo una, o usa nombres distintos (p.ej. "alejandro tovar (1)" / "(2)").
-      "alejandro tovar": { partner: "Lucia Montes de oca" },
-
+      "alejandro tovar camacho": { partner: "Lucia Montes de oca" },
+      "alejandro tovar montes de oca": { partner: "Mariana de Tovar" },
       "karla tovar": { partner: null },
       "cristina rabel": { partner: "José y Sara" },
       "daniel": { partner: "Daniela" },
@@ -91,6 +87,44 @@
 
     let confirmation = '';
 
+    // --- Normalización y búsqueda flexible ---
+    function normalizeName(s) {
+      return (s || "")
+        .toLowerCase()
+        .trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")               // quita signos (deja letras/números/espacios)
+        .replace(/\s+/g, " ");                           // colapsa espacios
+    }
+
+    const guestIndex = Object.entries(guests).map(([key, data]) => ({
+      key,
+      norm: normalizeName(key),
+      data
+    }));
+
+    function findGuestCandidates(inputName) {
+      const q = normalizeName(inputName);
+      if (!q) return [];
+
+      // 1) match exacto normalizado
+      let matches = guestIndex.filter(g => g.norm === q);
+      if (matches.length) return matches;
+
+      // 2) match por tokens (ej. "jaime" o "jaime tovar")
+      const tokens = q.split(" ").filter(Boolean);
+      matches = guestIndex.filter(g => {
+        const parts = g.norm.split(" ");
+        return tokens.every(t => parts.includes(t));
+      });
+      if (matches.length) return matches;
+
+      // 3) match por substring (más permisivo)
+      matches = guestIndex.filter(g => g.norm.includes(q));
+      return matches;
+    }
+    // --- Fin búsqueda flexible ---
+
     function setConfirmation(value) {
       confirmation = value;
       document.getElementById('confirmationValue').value = value;
@@ -100,26 +134,45 @@
 
     function submitForm() {
       const nameRaw = document.getElementById('name').value.trim();
-      const nameKey = nameRaw.toLowerCase();
       const email = document.getElementById('email').value.trim();
-      const guest = guests[nameKey];
 
       if (!nameRaw || !email) {
         alert('Por favor, ingresa nombre y email.');
         return;
       }
 
-      // Verifica que el nombre exista en la lista
-      if (!guest) {
-        alert('Tu nombre no está en la lista. Revisa que esté escrito exactamente como fue registrado.');
+      const candidates = findGuestCandidates(nameRaw);
+
+      if (candidates.length === 0) {
+        alert('Tu nombre no está en la lista. Intenta escribir nombre y apellido (sin acentos también funciona).');
         return;
       }
+
+      // Si hay más de un match, pedimos elección (máximo 8 opciones para no hacer un prompt infinito)
+      let selected = candidates[0];
+      if (candidates.length > 1) {
+        const shown = candidates.slice(0, 8);
+        const optionsText = shown.map((c, i) => `${i + 1}) ${c.key}`).join('\n');
+
+        const choice = prompt(
+          `Encontré varios nombres parecidos. Escribe el número correcto:\n\n${optionsText}\n\nEjemplo: 1`
+        );
+
+        const idx = parseInt(choice, 10);
+        if (!idx || idx < 1 || idx > shown.length) {
+          alert('No se seleccionó un nombre válido. Intenta de nuevo.');
+          return;
+        }
+        selected = shown[idx - 1];
+      }
+
+      const guest = selected.data;
 
       let thanksMessage = '';
       let partnerConfirmationValue = '';
 
       if (confirmation === 'SI') {
-        const displayName = nameRaw; // usa como lo escribió el usuario
+        const displayName = nameRaw;
         thanksMessage = `Gracias por confirmar tu asistencia, ${displayName}! `;
 
         if (guest.partner) {
@@ -140,7 +193,6 @@
       document.getElementById('thanks').innerHTML = `<p>${thanksMessage}</p>`;
       document.getElementById('thanks').style.display = 'block';
 
-      // Formspree endpoint
       const form = document.getElementById('confirmForm');
       form.action = 'https://formspree.io/f/xkovgwpl';
       form.submit();
