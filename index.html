@@ -11,6 +11,7 @@
     #thanks { display: none; }
     button { margin: 10px; padding: 10px 20px; cursor: pointer; }
     input { padding: 10px; width: min(380px, 90%); }
+    .muted { color: #666; font-size: 13px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -23,7 +24,7 @@
   </div>
 
   <div id="form-section">
-    <form id="confirmForm" method="POST">
+    <form id="confirmForm">
       <input type="hidden" id="confirmationValue" name="confirmacion">
 
       <label>Nombre:</label><br>
@@ -33,13 +34,18 @@
       <input type="email" id="email" name="email" required><br><br>
 
       <input type="hidden" id="partnerConfirmation" name="confirmacion_pareja">
-      <button type="button" onclick="submitForm()">Enviar</button>
+
+      <button id="sendBtn" type="button" onclick="submitForm()">Enviar</button>
+      <div class="muted" id="status"></div>
     </form>
   </div>
 
   <div id="thanks"></div>
 
   <script>
+    // ==== ENDPOINT FORMSPREE ====
+    const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkovgwpl';
+
     const guests = {
       "laura del pilar hortal": { partner: null },
       "ignacio fernández": { partner: null },
@@ -49,7 +55,7 @@
       "daniel tovar": { partner: "Samantha Henkel" },
       "jaime alberto tovar camacho": { partner: null },
       "alejandro tovar camacho": { partner: "Lucia Montes de oca" },
-      "alejandro tovar montes de oca": { partner: "Mariana de Tovar" },
+      "alejandro tovar montes de oca": { partner: "Lucia Montes de oca" },
       "karla tovar": { partner: null },
       "cristina rabel": { partner: "José y Sara" },
       "daniel": { partner: "Daniela" },
@@ -92,9 +98,9 @@
       return (s || "")
         .toLowerCase()
         .trim()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")               // quita signos (deja letras/números/espacios)
-        .replace(/\s+/g, " ");                           // colapsa espacios
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+        .replace(/\s+/g, " ");
     }
 
     const guestIndex = Object.entries(guests).map(([key, data]) => ({
@@ -107,11 +113,11 @@
       const q = normalizeName(inputName);
       if (!q) return [];
 
-      // 1) match exacto normalizado
+      // 1) exacto normalizado
       let matches = guestIndex.filter(g => g.norm === q);
       if (matches.length) return matches;
 
-      // 2) match por tokens (ej. "jaime" o "jaime tovar")
+      // 2) por tokens
       const tokens = q.split(" ").filter(Boolean);
       matches = guestIndex.filter(g => {
         const parts = g.norm.split(" ");
@@ -119,11 +125,11 @@
       });
       if (matches.length) return matches;
 
-      // 3) match por substring (más permisivo)
+      // 3) substring
       matches = guestIndex.filter(g => g.norm.includes(q));
       return matches;
     }
-    // --- Fin búsqueda flexible ---
+    // --- fin búsqueda flexible ---
 
     function setConfirmation(value) {
       confirmation = value;
@@ -132,7 +138,17 @@
       document.getElementById('form-section').style.display = 'block';
     }
 
-    function submitForm() {
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg || '';
+    }
+
+    function setBusy(isBusy) {
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = isBusy;
+      btn.textContent = isBusy ? 'Enviando...' : 'Enviar';
+    }
+
+    async function submitForm() {
       const nameRaw = document.getElementById('name').value.trim();
       const email = document.getElementById('email').value.trim();
 
@@ -148,16 +164,13 @@
         return;
       }
 
-      // Si hay más de un match, pedimos elección (máximo 8 opciones para no hacer un prompt infinito)
       let selected = candidates[0];
       if (candidates.length > 1) {
         const shown = candidates.slice(0, 8);
         const optionsText = shown.map((c, i) => `${i + 1}) ${c.key}`).join('\n');
-
         const choice = prompt(
           `Encontré varios nombres parecidos. Escribe el número correcto:\n\n${optionsText}\n\nEjemplo: 1`
         );
-
         const idx = parseInt(choice, 10);
         if (!idx || idx < 1 || idx > shown.length) {
           alert('No se seleccionó un nombre válido. Intenta de nuevo.');
@@ -172,8 +185,7 @@
       let partnerConfirmationValue = '';
 
       if (confirmation === 'SI') {
-        const displayName = nameRaw;
-        thanksMessage = `Gracias por confirmar tu asistencia, ${displayName}! `;
+        thanksMessage = `Gracias por confirmar tu asistencia, ${nameRaw}! `;
 
         if (guest.partner) {
           const confirmPartner = confirm(`Con tu nombre tenemos registrado a ${guest.partner}, ¿confirmas por él también?`);
@@ -189,13 +201,43 @@
       document.getElementById('partnerConfirmation').value =
         partnerConfirmationValue ? `Pareja: ${guest.partner} - Confirmación: ${partnerConfirmationValue}` : '';
 
+      // Mostrar tu mensaje en pantalla SIN SALIRTE
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('thanks').innerHTML = `<p>${thanksMessage}</p>`;
       document.getElementById('thanks').style.display = 'block';
 
-      const form = document.getElementById('confirmForm');
-      form.action = 'https://formspree.io/f/xkovgwpl';
-      form.submit();
+      // Enviar a Formspree por AJAX (sin redirección)
+      try {
+        setBusy(true);
+        setStatus('Enviando confirmación…');
+
+        const payload = new FormData();
+        payload.append('confirmacion', confirmation);
+        payload.append('nombre', nameRaw);
+        payload.append('email', email);
+        if (partnerConfirmationValue) {
+          payload.append('confirmacion_pareja', `Pareja: ${guest.partner} - Confirmación: ${partnerConfirmationValue}`);
+        } else {
+          payload.append('confirmacion_pareja', '');
+        }
+
+        const res = await fetch(FORMSPREE_ENDPOINT, {
+          method: 'POST',
+          body: payload,
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          setStatus('Confirmación enviada.');
+        } else {
+          // si Formspree responde con error, no redirige; mostramos aviso
+          setStatus('No se pudo enviar (Formspree). Intenta de nuevo más tarde.');
+        }
+      } catch (e) {
+        setStatus('No se pudo enviar (conexión). Intenta de nuevo más tarde.');
+      } finally {
+        setBusy(false);
+      }
     }
   </script>
 </body>
