@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.3">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="es"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Confirmación de Asistencia&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#confirmation { display: block; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#form-section { display: none; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#thanks { display: none; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>button { margin: 10px; padding: 10px 20px; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Confirmación de Asistencia al Evento&lt;/h1&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="confirmation"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p&gt;¿CONFIRMAS TU ASISTENCIA?&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="setConfirmation('SI')"&gt;SI&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="setConfirmation('NO')"&gt;NO&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="form-section"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;form id="confirmForm" method="POST"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="hidden" id="confirmationValue" name="confirmacion"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label&gt;Nombre:&lt;/label&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="name" name="nombre" required&gt;&lt;br&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label&gt;Email:&lt;/label&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="email" id="email" name="email" required&gt;&lt;br&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="hidden" id="partnerConfirmation" name="confirmacion_pareja"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button type="button" onclick="submitForm()"&gt;Enviar&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="thanks"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const guests = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Lista de invitados normalizada a minúsculas</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"laura del pilar hortal": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"ignacio fernández": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"gertrudis arzat": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"maría trinidad": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"diana tovar": {partner: "Andrés Ocampo"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"daniel tovar": {partner: "Samantha Henkel"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"jaime alberto tovar camacho": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"alejandro tovar": {partner: "Lucia Montes de oca"}, // Nota: Hay dos "Alejandro Tovar" con parejas diferentes; si son distintos, considera IDs únicos en links futuros</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"karla tovar": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"alejandro tovar": {partner: "Mariana"}, // Segundo Alejandro; matching duplicado posible, usa nombre completo si aplica</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"cristina rabel": {partner: "José y Sara"}, // Combinado como string único para manejar "Pareja 2"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"daniel": {partner: "Daniela"}, // Asumiendo "Daniel pareja Daniela" es nombre "Daniel"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"luis avedillo": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"pilar manzaneque": {partner: "Gerardo"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"ingrid parres": {partner: "Felipe escalera"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"greta parres": {partner: "Ricardo"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"laura manzaneque": {partner: "Oscar Gary"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"melissa reyes": {partner: "Manolo"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"daniela parra": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"rebecca": {partner: "Pepe Chong"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"sofía domengue": {partner: "Santiago abogado"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"valeria cantu": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"víctor palacios": {partner: "Ana Laura Hernández"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"cuauhtemoc carrillo": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"sol gonzález": {partner: "JP Villela"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"christian mudespacher": {partner: "EVELENA ZAMORANO"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"raúl ramírez": {partner: "Estefanía Nieva"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"mauricio villareal": {partner: "Tere"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"ana paula méndez": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"kike díaz montes": {partner: "Yazel"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"pablo torres": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"regina díaz montes": {partner: "James"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"santiago calles": {partner: "mariana R"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"daniel rivero": {partner: "Mariana Solórzano"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"gerardo": {partner: "Laura"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"boris": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"laura detoscano": {partner: "Arturo olavarrieta"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"alejandra gonzález": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"adrián otero": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"mario cuen": {partner: "NOMBRE POR DEFINIR"},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"daniela barros": {partner: null},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"santiago barros": {partner: null}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let confirmation = '';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function setConfirmation(value) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>confirmation = value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('confirmationValue').value = value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('confirmation').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('form-section').style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function submitForm() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const nameInput = document.getElementById('name').value.trim().toLowerCase();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const email = document.getElementById('email').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const guest = guests[nameInput];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!nameInput || !email) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>alert('Por favor, ingresa nombre y email.');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>let thanksMessage = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let partnerConfirmationValue = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (confirmation === 'SI') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>thanksMessage = `Gracias por confirmar tu asistencia, ${nameInput.charAt(0).toUpperCase() + nameInput.slice(1)}! `;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (guest &amp;&amp; guest.partner) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const confirmPartner = confirm(`Con tu nombre tenemos registrado a ${guest.partner}, ¿confirmas por él también?`);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>partnerConfirmationValue = confirmPartner ? 'SI' : 'NO';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>thanksMessage += confirmPartner ? `También confirmamos por ${guest.partner}.` : `No confirmamos por ${guest.partner}.`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>thanksMessage += 'Te recordamos que tu asistencia es PERSONAL, UNICA e INTRANSFERIBLE.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>thanksMessage = `Gracias por informarnos que NO asistirás, ${nameInput.charAt(0).toUpperCase() + nameInput.slice(1)}.`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('partnerConfirmation').value = partnerConfirmationValue ? `Pareja: ${guest ? guest.partner : 'N/A'} - Confirmación: ${partnerConfirmationValue}` : '';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('form-section').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('thanks').innerHTML = `&lt;p&gt;${thanksMessage}&lt;/p&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('thanks').style.display = 'block';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Envía el form a Formspree</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const form = document.getElementById('confirmForm');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>form.action = 'https://formspree.io/f/xkovgwpl';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>form.submit();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
