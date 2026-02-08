@@ -7,17 +7,34 @@
 
   <style>
     body{
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      min-height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  min-height: 100vh;
 
-      background-image: url("fondo.jpg");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-    }
+  background-image: url("fondo.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center 35%; /* sube el foco un poco */
+  /* background-attachment: fixed;  <-- QUÍTALO para iPhone */
+}
+
+/* Ajuste específico para pantallas angostas (celular) */
+@media (max-width: 600px){
+  body{
+    background-position: center 20%; /* más arriba; ajusta 10%-50% a ojo */
+  }
+}
+
+/* (Opcional) mejora lectura: una “capa” suave encima del fondo */
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25); /* sube/baja 0.15-0.40 */
+  pointer-events: none;
+  z-index: -1;
+}
 
     .panel{
       max-width: 720px;
@@ -40,7 +57,7 @@
 
 <body>
   <div class="panel">
-    <h1>Confirmación de Asistencia al Evento</h1>
+    <h1>Confirmación de Asistencia al Gender de Lau y Jaime <3 </h1>
 
     <div id="confirmation">
       <p>POR FAVOR ¿CONFIRMAS TU ASISTENCIA?</p>
