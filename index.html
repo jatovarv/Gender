@@ -6,28 +6,61 @@
   <title>Confirmación de Asistencia</title>
 
   <style>
+    /* Base */
     body{
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  min-height: 100vh;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      min-height: 100dvh;
+      position: relative; /* necesario para capas */
+    }
 
-  background-image: url("fondo.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center 35%; /* sube el foco un poco */
-  /* background-attachment: fixed;  <-- QUÍTALO para iPhone */
-}
+    /*
+      Fondo en una capa separada para poder:
+      - hacer flip vertical (scaleY(-1))
+      - controlar el enfoque
+      - evitar que iOS haga cosas raras con background-attachment
+    */
+    body::before{
+      content:"";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
 
-/* Ajuste específico para pantallas angostas (celular) */
-@media (max-width: 600px){
-  body{
-    background-image: url("fondo-mobile.jpg");
-    background-position: center top;   /* asegura que los osos se vean */
-    background-size: cover;
-    background-repeat: no-repeat;
-  }
-}
+      /* Desktop: usa fondo.jpg */
+      background-image: url("fondo.jpg");
+      background-size: cover;
+      background-repeat: no-repeat;
+
+      /*
+        Ajuste de enfoque:
+        - Si quieres que lo de arriba quede "por debajo del centro", sube este %
+        - Prueba 60% / 70% / 80%
+      */
+      background-position: center 70%;
+
+      /* Inversión vertical: arriba <-> abajo */
+      transform: scaleY(-1);
+      transform-origin: center;
+    }
+
+    /* En móvil: si existe fondo-mobile.jpg úsalo; si NO, cae a fondo.jpg */
+    @media (max-width: 600px){
+      body::before{
+        background-image: url("fondo-mobile.jpg"), url("fondo.jpg");
+        background-position: center 75%;  /* ajusta 65%–85% */
+      }
+    }
+
+    /* (Opcional) Capa suave para que el panel se lea mejor */
+    body::after{
+      content:"";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: rgba(0,0,0,0.12);
+      pointer-events: none;
+    }
 
     .panel{
       max-width: 720px;
@@ -79,7 +112,6 @@
   </div>
 
   <script>
-    // ==== ENDPOINT FORMSPREE ====
     const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkovgwpl';
 
     const guests = {
@@ -232,12 +264,10 @@
       document.getElementById('partnerConfirmation').value =
         partnerConfirmationValue ? `Pareja: ${guest.partner} - Confirmación: ${partnerConfirmationValue}` : '';
 
-      // Mostrar tu mensaje en pantalla SIN SALIRTE
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('thanks').innerHTML = `<p>${thanksMessage}</p>`;
       document.getElementById('thanks').style.display = 'block';
 
-      // Enviar a Formspree por AJAX (sin redirección)
       try {
         setBusy(true);
         setStatus('Enviando confirmación…');
@@ -257,11 +287,7 @@
           headers: { 'Accept': 'application/json' }
         });
 
-        if (res.ok) {
-          setStatus('Confirmación enviada.');
-        } else {
-          setStatus('No se pudo enviar (Formspree). Intenta de nuevo más tarde.');
-        }
+        setStatus(res.ok ? 'Confirmación enviada.' : 'No se pudo enviar (Formspree). Intenta de nuevo más tarde.');
       } catch (e) {
         setStatus('No se pudo enviar (conexión). Intenta de nuevo más tarde.');
       } finally {
