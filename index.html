@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmación de Asistencia</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+    #confirmation { display: block; }
+    #form-section { display: none; }
+    #thanks { display: none; }
+    button { margin: 10px; padding: 10px 20px; }
+    input { padding: 10px; width: min(380px, 90%); }
+  </style>
+</head>
+<body>
+  <h1>Confirmación de Asistencia al Evento</h1>
+
+  <div id="confirmation">
+    <p>¿CONFIRMAS TU ASISTENCIA?</p>
+    <button type="button" onclick="setConfirmation('SI')">SI</button>
+    <button type="button" onclick="setConfirmation('NO')">NO</button>
+  </div>
+
+  <div id="form-section">
+    <form id="confirmForm" method="POST">
+      <input type="hidden" id="confirmationValue" name="confirmacion">
+
+      <label>Nombre:</label><br>
+      <input type="text" id="name" name="nombre" required><br><br>
+
+      <label>Email:</label><br>
+      <input type="email" id="email" name="email" required><br><br>
+
+      <input type="hidden" id="partnerConfirmation" name="confirmacion_pareja">
+      <button type="button" onclick="submitForm()">Enviar</button>
+    </form>
+  </div>
+
+  <div id="thanks"></div>
+
+  <script>
+    const guests = {
+      // Lista de invitados normalizada a minúsculas
+      "laura del pilar hortal": { partner: null },
+      "ignacio fernández": { partner: null },
+      "gertrudis arzat": { partner: null },
+      "maría trinidad": { partner: null },
+      "diana tovar": { partner: "Andrés Ocampo" },
+      "daniel tovar": { partner: "Samantha Henkel" },
+      "jaime alberto tovar camacho": { partner: null },
+
+      // OJO: en tu archivo tenías "alejandro tovar" dos veces; la segunda pisa a la primera.
+      // Deja solo una, o usa nombres distintos (p.ej. "alejandro tovar (1)" / "(2)").
+      "alejandro tovar": { partner: "Lucia Montes de oca" },
+
+      "karla tovar": { partner: null },
+      "cristina rabel": { partner: "José y Sara" },
+      "daniel": { partner: "Daniela" },
+      "luis avedillo": { partner: null },
+      "pilar manzaneque": { partner: "Gerardo" },
+      "ingrid parres": { partner: "Felipe escalera" },
+      "greta parres": { partner: "Ricardo" },
+      "laura manzaneque": { partner: "Oscar Gary" },
+      "melissa reyes": { partner: "Manolo" },
+      "daniela parra": { partner: null },
+      "rebecca": { partner: "Pepe Chong" },
+      "sofía domengue": { partner: "Santiago abogado" },
+      "valeria cantu": { partner: null },
+      "víctor palacios": { partner: "Ana Laura Hernández" },
+      "cuauhtemoc carrillo": { partner: null },
+      "sol gonzález": { partner: "JP Villela" },
+      "christian mudespacher": { partner: "EVELENA ZAMORANO" },
+      "raúl ramírez": { partner: "Estefanía Nieva" },
+      "mauricio villareal": { partner: "Tere" },
+      "ana paula méndez": { partner: null },
+      "kike díaz montes": { partner: "Yazel" },
+      "pablo torres": { partner: null },
+      "regina díaz montes": { partner: "James" },
+      "santiago calles": { partner: "mariana R" },
+      "daniel rivero": { partner: "Mariana Solórzano" },
+      "gerardo": { partner: "Laura" },
+      "boris": { partner: null },
+      "laura detoscano": { partner: "Arturo olavarrieta" },
+      "alejandra gonzález": { partner: null },
+      "adrián otero": { partner: null },
+      "mario cuen": { partner: "NOMBRE POR DEFINIR" },
+      "daniela barros": { partner: null },
+      "santiago barros": { partner: null }
+    };
+
+    let confirmation = '';
+
+    function setConfirmation(value) {
+      confirmation = value;
+      document.getElementById('confirmationValue').value = value;
+      document.getElementById('confirmation').style.display = 'none';
+      document.getElementById('form-section').style.display = 'block';
+    }
+
+    function submitForm() {
+      const nameRaw = document.getElementById('name').value.trim();
+      const nameKey = nameRaw.toLowerCase();
+      const email = document.getElementById('email').value.trim();
+      const guest = guests[nameKey];
+
+      if (!nameRaw || !email) {
+        alert('Por favor, ingresa nombre y email.');
+        return;
+      }
+
+      // Verifica que el nombre exista en la lista
+      if (!guest) {
+        alert('Tu nombre no está en la lista. Revisa que esté escrito exactamente como fue registrado.');
+        return;
+      }
+
+      let thanksMessage = '';
+      let partnerConfirmationValue = '';
+
+      if (confirmation === 'SI') {
+        const displayName = nameRaw; // usa como lo escribió el usuario
+        thanksMessage = `Gracias por confirmar tu asistencia, ${displayName}! `;
+
+        if (guest.partner) {
+          const confirmPartner = confirm(`Con tu nombre tenemos registrado a ${guest.partner}, ¿confirmas por él también?`);
+          partnerConfirmationValue = confirmPartner ? 'SI' : 'NO';
+          thanksMessage += confirmPartner ? `También confirmamos por ${guest.partner}.` : `No confirmamos por ${guest.partner}.`;
+        } else {
+          thanksMessage += 'Te recordamos que tu asistencia es PERSONAL, ÚNICA e INTRANSFERIBLE.';
+        }
+      } else {
+        thanksMessage = `Gracias por informarnos que NO asistirás, ${nameRaw}.`;
+      }
+
+      document.getElementById('partnerConfirmation').value =
+        partnerConfirmationValue ? `Pareja: ${guest.partner} - Confirmación: ${partnerConfirmationValue}` : '';
+
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('thanks').innerHTML = `<p>${thanksMessage}</p>`;
+      document.getElementById('thanks').style.display = 'block';
+
+      // Formspree endpoint
+      const form = document.getElementById('confirmForm');
+      form.action = 'https://formspree.io/f/xkovgwpl';
+      form.submit();
+    }
+  </script>
+</body>
+</html>
