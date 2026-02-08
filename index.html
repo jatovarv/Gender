@@ -4,43 +4,69 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirmación de Asistencia</title>
+
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+    body{
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      min-height: 100vh;
+
+      background-image: url("fondo.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .panel{
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 24px;
+      background: rgba(255,255,255,0.88);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
     #confirmation { display: block; }
     #form-section { display: none; }
     #thanks { display: none; }
+
     button { margin: 10px; padding: 10px 20px; cursor: pointer; }
     input { padding: 10px; width: min(380px, 90%); }
     .muted { color: #666; font-size: 13px; margin-top: 10px; }
   </style>
 </head>
+
 <body>
-  <h1>Confirmación de Asistencia al Evento</h1>
+  <div class="panel">
+    <h1>Confirmación de Asistencia al Evento</h1>
 
-  <div id="confirmation">
-    <p>POR FAVOR ¿CONFIRMAS TU ASISTENCIA?</p>
-    <button type="button" onclick="setConfirmation('SI')">SI</button>
-    <button type="button" onclick="setConfirmation('NO')">NO</button>
+    <div id="confirmation">
+      <p>POR FAVOR ¿CONFIRMAS TU ASISTENCIA?</p>
+      <button type="button" onclick="setConfirmation('SI')">SI</button>
+      <button type="button" onclick="setConfirmation('NO')">NO</button>
+    </div>
+
+    <div id="form-section">
+      <form id="confirmForm">
+        <input type="hidden" id="confirmationValue" name="confirmacion">
+
+        <label>Nombre:</label><br>
+        <input type="text" id="name" name="nombre" required><br><br>
+
+        <label>Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <input type="hidden" id="partnerConfirmation" name="confirmacion_pareja">
+
+        <button id="sendBtn" type="button" onclick="submitForm()">Enviar</button>
+        <div class="muted" id="status"></div>
+      </form>
+    </div>
+
+    <div id="thanks"></div>
   </div>
-
-  <div id="form-section">
-    <form id="confirmForm">
-      <input type="hidden" id="confirmationValue" name="confirmacion">
-
-      <label>Nombre:</label><br>
-      <input type="text" id="name" name="nombre" required><br><br>
-
-      <label>Email:</label><br>
-      <input type="email" id="email" name="email" required><br><br>
-
-      <input type="hidden" id="partnerConfirmation" name="confirmacion_pareja">
-
-      <button id="sendBtn" type="button" onclick="submitForm()">Enviar</button>
-      <div class="muted" id="status"></div>
-    </form>
-  </div>
-
-  <div id="thanks"></div>
 
   <script>
     // ==== ENDPOINT FORMSPREE ====
@@ -93,7 +119,6 @@
 
     let confirmation = '';
 
-    // --- Normalización y búsqueda flexible ---
     function normalizeName(s) {
       return (s || "")
         .toLowerCase()
@@ -113,11 +138,9 @@
       const q = normalizeName(inputName);
       if (!q) return [];
 
-      // 1) exacto normalizado
       let matches = guestIndex.filter(g => g.norm === q);
       if (matches.length) return matches;
 
-      // 2) por tokens
       const tokens = q.split(" ").filter(Boolean);
       matches = guestIndex.filter(g => {
         const parts = g.norm.split(" ");
@@ -125,11 +148,9 @@
       });
       if (matches.length) return matches;
 
-      // 3) substring
       matches = guestIndex.filter(g => g.norm.includes(q));
       return matches;
     }
-    // --- fin búsqueda flexible ---
 
     function setConfirmation(value) {
       confirmation = value;
@@ -215,11 +236,10 @@
         payload.append('confirmacion', confirmation);
         payload.append('nombre', nameRaw);
         payload.append('email', email);
-        if (partnerConfirmationValue) {
-          payload.append('confirmacion_pareja', `Pareja: ${guest.partner} - Confirmación: ${partnerConfirmationValue}`);
-        } else {
-          payload.append('confirmacion_pareja', '');
-        }
+        payload.append(
+          'confirmacion_pareja',
+          partnerConfirmationValue ? `Pareja: ${guest.partner} - Confirmación: ${partnerConfirmationValue}` : ''
+        );
 
         const res = await fetch(FORMSPREE_ENDPOINT, {
           method: 'POST',
@@ -230,7 +250,6 @@
         if (res.ok) {
           setStatus('Confirmación enviada.');
         } else {
-          // si Formspree responde con error, no redirige; mostramos aviso
           setStatus('No se pudo enviar (Formspree). Intenta de nuevo más tarde.');
         }
       } catch (e) {
