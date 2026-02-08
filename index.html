@@ -18,7 +18,7 @@
   <h1>Confirmación de Asistencia al Evento</h1>
 
   <div id="confirmation">
-    <p>¿CONFIRMAS TU ASISTENCIA?</p>
+    <p>POR FAVOR ¿CONFIRMAS TU ASISTENCIA?</p>
     <button type="button" onclick="setConfirmation('SI')">SI</button>
     <button type="button" onclick="setConfirmation('NO')">NO</button>
   </div>
@@ -55,7 +55,7 @@
       "daniel tovar": { partner: "Samantha Henkel" },
       "jaime alberto tovar camacho": { partner: null },
       "alejandro tovar camacho": { partner: "Lucia Montes de oca" },
-      "alejandro tovar montes de oca": { partner: "Lucia Montes de oca" },
+      "alejandro tovar montes de oca": { partner: "Mariana de Tovar" },
       "karla tovar": { partner: null },
       "cristina rabel": { partner: "José y Sara" },
       "daniel": { partner: "Daniela" },
@@ -188,7 +188,7 @@
         thanksMessage = `Gracias por confirmar tu asistencia, ${nameRaw}! `;
 
         if (guest.partner) {
-          const confirmPartner = confirm(`Con tu nombre tenemos registrado a ${guest.partner}, ¿confirmas por él también?`);
+          const confirmPartner = confirm(`Con tu nombre tenemos registrado a ${guest.partner}, ¿confirmas por él/ella también?`);
           partnerConfirmationValue = confirmPartner ? 'SI' : 'NO';
           thanksMessage += confirmPartner ? `También confirmamos por ${guest.partner}.` : `No confirmamos por ${guest.partner}.`;
         } else {
